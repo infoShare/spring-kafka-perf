@@ -37,7 +37,7 @@ public class KafkaAsyncPerfService {
 
         for (int i = 0; i < count; i++) {
             ProducerRecord<String, String> record = new ProducerRecord<>(
-                    properties.getRequestTopicSync(),
+                    properties.getRequestTopicAsync(),
                     "async-" + i,
                     payload(i)
             );

@@ -1,9 +1,10 @@
 # spring-kafka-perf
 
-`spring-kafka-perf` is a small Spring Boot Kafka benchmark harness that can run in two startup modes:
+`spring-kafka-perf` is a small Spring Boot Kafka benchmark harness that can run in three startup modes:
 
 - **Async mode**: producer-send performance using `KafkaTemplate`
 - **Sync mode**: request/reply performance using `ReplyingKafkaTemplate`
+- **Direct mode**: request/reply performance using raw `kafka-clients` `KafkaProducer` and `KafkaConsumer`
 
 The project was created to compare Kafka performance between **Spring Kafka 3.x.x** and **Spring Kafka 4.x.x** based application setups.
 
@@ -74,20 +75,40 @@ Use this checklist against `pom.xml`:
 
 ## Runtime modes
 
+The preferred selector is `kafka.perf.mode` with these values:
+
+- `async`
+- `sync`
+- `direct`
+
+For backward compatibility, the older `kafka.perf.sync` property is still accepted. If it is set, it overrides `kafka.perf.mode` and maps to:
+
+- `true` -> `sync`
+- `false` -> `async`
+
 ### Async mode
 
-- Enabled with `kafka.perf.sync=false`
+- Enabled with `kafka.perf.mode=async`
 - This is the current default in `src/main/resources/application.properties`
 - Uses `KafkaAsyncPerfService`
 - Sends messages with `KafkaTemplate` and waits for the broker send result for each message
+- Publishes to `kafka.perf.request-topic-async`
 
 ### Sync mode
 
-- Enabled with `kafka.perf.sync=true`
+- Enabled with `kafka.perf.mode=sync`
 - Uses `KafkaSyncPerfService`
 - Sends messages with `ReplyingKafkaTemplate`
 - Waits for a reply on the configured reply topic
 - The listener echoes the original payload back to the sender
+
+### Direct mode
+
+- Enabled with `kafka.perf.mode=direct`
+- Uses `KafkaClientsPerfService`
+- Uses raw `KafkaProducer` / `KafkaConsumer` from `org.apache.kafka:kafka-clients`
+- Starts an internal raw-client echo responder for the direct request topic
+- Measures end-to-end request/reply without `KafkaTemplate`, `ReplyingKafkaTemplate`, or `@KafkaListener` in the benchmark path
 
 ## Configuration
 
@@ -98,16 +119,19 @@ The application properties currently defined in `src/main/resources/application.
 | `spring.kafka.bootstrap-servers` | `${KAFKA_BOOTSTRAP_SERVERS:localhost:29092}` | Kafka bootstrap servers |
 | `kafka.perf.request-topic-sync` | `kafka-perf-request-topic-sync` | Request topic used by the sync path |
 | `kafka.perf.request-topic-async` | `kafka-perf-request-topic-async` | Request topic configured for the async listener path |
+| `kafka.perf.request-topic-client` | `kafka-perf-request-topic-client` | Request topic used by the direct `kafka-clients` path |
 | `kafka.perf.reply-topic` | `kafka-perf-reply-topic` | Reply topic used by request/reply |
+| `kafka.perf.reply-topic-client` | `kafka-perf-reply-topic-client` | Reply topic used by the direct `kafka-clients` path |
 | `kafka.perf.consumer-group` | `kafka-perf-group` | Base consumer group for the listeners |
 | `kafka.perf.message-count` | `10000` | Number of messages sent during the startup run |
 | `kafka.perf.payload-bytes` | `256` | Minimum payload size for generated messages |
 | `kafka.perf.timeout` | `30s` | Per-message timeout used by the benchmark |
-| `kafka.perf.sync` | `false` | Selects sync (`true`) or async (`false`) mode |
+| `kafka.perf.mode` | `async` | Selects `async`, `sync`, or `direct` mode |
+| `kafka.perf.sync` | unset | Legacy compatibility override for `async` / `sync` only |
 
 Additional wiring from the current code:
 
-- `KafkaClientConfig` creates the sync request, async request, and reply topics automatically
+- `KafkaClientConfig` creates the sync, async, direct request, and reply topics automatically
 - The reply listener container uses the group id `${kafka.perf.consumer-group}-reply`
 - `RequestReplyPerfListener` listens on both request topics
 
@@ -141,7 +165,13 @@ cmd /c "mvn spring-boot:run"
 ### Run in sync mode
 
 ```bat
-cmd /c "mvn spring-boot:run -Dspring-boot.run.arguments=--kafka.perf.sync=true"
+cmd /c "mvn spring-boot:run -Dspring-boot.run.arguments=--kafka.perf.mode=sync"
+```
+
+### Run in direct kafka-clients mode
+
+```bat
+cmd /c "mvn spring-boot:run -Dspring-boot.run.arguments=--kafka.perf.mode=direct"
 ```
 
 ### Override the message count for one run
@@ -158,15 +188,16 @@ cmd /c "set KAFKA_BOOTSTRAP_SERVERS=localhost:29092 && mvn spring-boot:run"
 
 ## What to expect in the logs
 
-At startup, `KafkaPerfStartupRunner` chooses the mode from `kafka.perf.sync`, runs the benchmark once, and logs a line similar to:
+At startup, `KafkaPerfStartupRunner` chooses the mode from `kafka.perf.mode` (or the legacy `kafka.perf.sync` override when present), runs the benchmark once, and logs a line similar to:
 
-- `Kafka perf run completed: PerfRunResult(...) for sync false`
+- `Kafka perf run completed for mode direct: PerfRunResult(...)`
 
 ## Useful source files
 
 - `src/main/java/org/example/springkafkaperf/perf/KafkaPerfStartupRunner.java`
 - `src/main/java/org/example/springkafkaperf/perf/KafkaSyncPerfService.java`
 - `src/main/java/org/example/springkafkaperf/perf/KafkaAsyncPerfService.java`
+- `src/main/java/org/example/springkafkaperf/perf/KafkaClientsPerfService.java`
 - `src/main/java/org/example/springkafkaperf/perf/RequestReplyPerfListener.java`
 - `src/main/java/org/example/springkafkaperf/config/KafkaClientConfig.java`
 - `src/main/resources/application.properties`

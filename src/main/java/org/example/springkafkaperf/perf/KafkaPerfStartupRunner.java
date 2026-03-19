@@ -14,25 +14,28 @@ public class KafkaPerfStartupRunner implements ApplicationRunner {
 
     private final KafkaSyncPerfService kafkaSyncPerfService;
     private final KafkaAsyncPerfService kafkaAsyncPerfService;
+    private final KafkaClientsPerfService kafkaClientsPerfService;
     private final KafkaPerfProperties kafkaPerfProperties;
 
     public KafkaPerfStartupRunner(KafkaSyncPerfService kafkaSyncPerfService,
                                   KafkaAsyncPerfService kafkaAsyncPerfService,
+                                  KafkaClientsPerfService kafkaClientsPerfService,
                                   KafkaPerfProperties kafkaPerfProperties) {
         this.kafkaSyncPerfService = kafkaSyncPerfService;
         this.kafkaAsyncPerfService = kafkaAsyncPerfService;
+        this.kafkaClientsPerfService = kafkaClientsPerfService;
         this.kafkaPerfProperties = kafkaPerfProperties;
     }
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        PerfRunResult result;
-        if (kafkaPerfProperties.isSync()) {
-            result = kafkaSyncPerfService.runSync();
-        } else {
-            result = kafkaAsyncPerfService.runAsync();
-        }
-        LOGGER.info("Kafka perf run completed: {} for sync {}", result, kafkaPerfProperties.isSync());
+        KafkaPerfProperties.Mode mode = kafkaPerfProperties.getMode();
+        PerfRunResult result = switch (mode) {
+            case SYNC -> kafkaSyncPerfService.runSync();
+            case DIRECT -> kafkaClientsPerfService.runDirect();
+            case ASYNC -> kafkaAsyncPerfService.runAsync();
+        };
+        LOGGER.info("Kafka perf run completed for mode {}: {}", mode, result);
         System.exit(0);
     }
 }

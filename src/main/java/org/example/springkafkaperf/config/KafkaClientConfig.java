@@ -34,8 +34,24 @@ public class KafkaClientConfig {
     }
 
     @Bean
+    public NewTopic kafkaPerfReplyTopicClient(KafkaPerfProperties properties) {
+        return TopicBuilder.name(properties.getReplyTopicClient())
+                .partitions(1)
+                .replicas(1)
+                .build();
+    }
+
+    @Bean
     public NewTopic kafkaPerfRequestTopicAsync(KafkaPerfProperties properties) {
         return TopicBuilder.name(properties.getRequestTopicAsync())
+                .partitions(3)
+                .replicas(1)
+                .build();
+    }
+
+    @Bean
+    public NewTopic kafkaPerfRequestTopicClient(KafkaPerfProperties properties) {
+        return TopicBuilder.name(properties.getRequestTopicClient())
                 .partitions(3)
                 .replicas(1)
                 .build();
