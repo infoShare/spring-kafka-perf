@@ -75,21 +75,15 @@ Use this checklist against `pom.xml`:
 
 ## Runtime modes
 
-The preferred selector is `kafka.perf.mode` with these values:
+Use `kafka.perf.mode` to choose the startup benchmark path:
 
 - `async`
 - `sync`
 - `direct`
 
-For backward compatibility, the older `kafka.perf.sync` property is still accepted. If it is set, it overrides `kafka.perf.mode` and maps to:
-
-- `true` -> `sync`
-- `false` -> `async`
-
 ### Async mode
 
 - Enabled with `kafka.perf.mode=async`
-- This is the current default in `src/main/resources/application.properties`
 - Uses `KafkaAsyncPerfService`
 - Sends messages with `KafkaTemplate` and waits for the broker send result for each message
 - Publishes to `kafka.perf.request-topic-async`
@@ -105,6 +99,7 @@ For backward compatibility, the older `kafka.perf.sync` property is still accept
 ### Direct mode
 
 - Enabled with `kafka.perf.mode=direct`
+- This is the current default in `src/main/resources/application.properties`
 - Uses `KafkaClientsPerfService`
 - Uses raw `KafkaProducer` / `KafkaConsumer` from `org.apache.kafka:kafka-clients`
 - Starts an internal raw-client echo responder for the direct request topic
@@ -126,12 +121,11 @@ The application properties currently defined in `src/main/resources/application.
 | `kafka.perf.message-count` | `10000` | Number of messages sent during the startup run |
 | `kafka.perf.payload-bytes` | `256` | Minimum payload size for generated messages |
 | `kafka.perf.timeout` | `30s` | Per-message timeout used by the benchmark |
-| `kafka.perf.mode` | `async` | Selects `async`, `sync`, or `direct` mode |
-| `kafka.perf.sync` | unset | Legacy compatibility override for `async` / `sync` only |
+| `kafka.perf.mode` | `direct` | Selects `async`, `sync`, or `direct` mode |
 
 Additional wiring from the current code:
 
-- `KafkaClientConfig` creates the sync, async, direct request, and reply topics automatically
+- `KafkaClientConfig` creates the sync, async, and direct request topics plus both reply topics automatically
 - The reply listener container uses the group id `${kafka.perf.consumer-group}-reply`
 - `RequestReplyPerfListener` listens on both request topics
 
@@ -156,10 +150,18 @@ cmd /c "podman compose -f docker-compose.yml down"
 
 The project currently uses Maven directly; there is no Maven wrapper checked into the repository.
 
-### Run with the default async configuration
+### Run with the current default configuration
 
 ```bat
 cmd /c "mvn spring-boot:run"
+```
+
+This uses the current default from `src/main/resources/application.properties`, which is `kafka.perf.mode=direct`.
+
+### Run in async mode
+
+```bat
+cmd /c "mvn spring-boot:run -Dspring-boot.run.arguments=--kafka.perf.mode=async"
 ```
 
 ### Run in sync mode
@@ -188,7 +190,7 @@ cmd /c "set KAFKA_BOOTSTRAP_SERVERS=localhost:29092 && mvn spring-boot:run"
 
 ## What to expect in the logs
 
-At startup, `KafkaPerfStartupRunner` chooses the mode from `kafka.perf.mode` (or the legacy `kafka.perf.sync` override when present), runs the benchmark once, and logs a line similar to:
+At startup, `KafkaPerfStartupRunner` chooses the mode from `kafka.perf.mode`, runs the benchmark once, and logs a line similar to:
 
 - `Kafka perf run completed for mode direct: PerfRunResult(...)`
 

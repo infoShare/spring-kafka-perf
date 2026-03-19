@@ -50,9 +50,9 @@ Quick verification:
 ## Current startup behavior
 
 - The application executes one benchmark at startup through `KafkaPerfStartupRunner`
-- Mode selection is controlled by `kafka.perf.sync`
-- `true` runs the synchronous request/reply path
-- `false` runs the asynchronous producer-send path
+- Mode selection is controlled by `kafka.perf.mode`
+- Supported values are `async`, `sync`, and `direct`
+- `src/main/resources/application.properties` currently sets `kafka.perf.mode=direct`
 
 ## Key properties
 
@@ -60,19 +60,21 @@ These are the project-specific properties currently bound by `KafkaPerfPropertie
 
 - `kafka.perf.request-topic-sync`
 - `kafka.perf.request-topic-async`
+- `kafka.perf.request-topic-client`
 - `kafka.perf.reply-topic`
+- `kafka.perf.reply-topic-client`
 - `kafka.perf.consumer-group`
 - `kafka.perf.message-count`
 - `kafka.perf.payload-bytes`
 - `kafka.perf.timeout`
-- `kafka.perf.sync`
+- `kafka.perf.mode`
 
 The Kafka broker address is configured through:
 
 - `spring.kafka.bootstrap-servers`
 - `KAFKA_BOOTSTRAP_SERVERS` environment variable override
 
-## Sync vs async at a glance
+## Modes at a glance
 
 ### Sync mode
 
@@ -89,13 +91,23 @@ The Kafka broker address is configured through:
 - Listener topic property: `kafka.perf.request-topic-async`
 - Listener method: `RequestReplyPerfListener.onRequestAsync`
 
+### Direct mode
+
+- Service: `KafkaClientsPerfService`
+- Clients: raw `KafkaProducer<String, String>` and `KafkaConsumer<String, String>`
+- Request topic property: `kafka.perf.request-topic-client`
+- Reply topic property: `kafka.perf.reply-topic-client`
+- The benchmark path uses raw `kafka-clients` request/reply rather than Spring listener/template request handling
+
 ## Topic and listener wiring
 
-`KafkaClientConfig` creates three topics:
+`KafkaClientConfig` creates five topics:
 
 - sync request topic
 - async request topic
+- direct request topic
 - reply topic
+- direct reply topic
 
 The reply listener container uses:
 
@@ -106,7 +118,10 @@ The reply listener container uses:
 
 - Use `podman compose -f docker-compose.yml up -d` to start Kafka locally
 - Use `mvn spring-boot:run` to start the application
-- Use `-Dspring-boot.run.arguments=--kafka.perf.sync=true` to switch to sync mode for one run
+- The default startup mode is currently `kafka.perf.mode=direct`
+- Use `-Dspring-boot.run.arguments=--kafka.perf.mode=sync` to switch to sync mode for one run
+- Use `-Dspring-boot.run.arguments=--kafka.perf.mode=async` to switch to async mode for one run
+- Use `-Dspring-boot.run.arguments=--kafka.perf.mode=direct` to switch to direct mode for one run
 
 ## Useful references
 
