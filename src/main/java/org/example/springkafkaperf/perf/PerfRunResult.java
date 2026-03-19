@@ -1,6 +1,6 @@
 package org.example.springkafkaperf.perf;
 
-public record SyncPerfRunResult(
+public record PerfRunResult(
         int requestedCount,
         int repliedCount,
         int timeoutCount,

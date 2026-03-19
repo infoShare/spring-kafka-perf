@@ -7,13 +7,14 @@ import java.time.Duration;
 @ConfigurationProperties(prefix = "kafka.perf")
 public class KafkaPerfProperties {
 
-    private String requestTopic = "kafka-perf-request-topic";
+    private String requestTopicSync = "kafka-perf-request-topic-sync";
+    private String requestTopicAsync = "kafka-perf-request-topic-async";
     private String replyTopic = "kafka-perf-reply-topic";
     private String consumerGroup = "kafka-perf-group";
     private int messageCount = 1000;
     private int payloadBytes = 256;
     private Duration timeout = Duration.ofSeconds(30);
-    private boolean startupEnabled;
+    private boolean sync;
 
     public String getConsumerGroup() {
         return consumerGroup;
@@ -23,12 +24,20 @@ public class KafkaPerfProperties {
         this.consumerGroup = consumerGroup;
     }
 
-    public String getRequestTopic() {
-        return requestTopic;
+    public String getRequestTopicSync() {
+        return requestTopicSync;
     }
 
-    public void setRequestTopic(String requestTopic) {
-        this.requestTopic = requestTopic;
+    public void setRequestTopicSync(String requestTopicSync) {
+        this.requestTopicSync = requestTopicSync;
+    }
+
+    public String getRequestTopicAsync() {
+        return requestTopicAsync;
+    }
+
+    public void setRequestTopicAsync(String requestTopicAsync) {
+        this.requestTopicAsync = requestTopicAsync;
     }
 
     public String getReplyTopic() {
@@ -64,12 +73,12 @@ public class KafkaPerfProperties {
     }
 
 
-    public boolean isStartupEnabled() {
-        return startupEnabled;
+    public boolean isSync() {
+        return sync;
     }
 
-    public void setStartupEnabled(boolean startupEnabled) {
-        this.startupEnabled = startupEnabled;
+    public void setSync(boolean sync) {
+        this.sync = sync;
     }
 }
 

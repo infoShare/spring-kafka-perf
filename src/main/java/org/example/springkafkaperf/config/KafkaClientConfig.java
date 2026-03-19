@@ -18,8 +18,8 @@ import org.springframework.kafka.requestreply.ReplyingKafkaTemplate;
 public class KafkaClientConfig {
 
     @Bean
-    public NewTopic kafkaPerfRequestTopic(KafkaPerfProperties properties) {
-        return TopicBuilder.name(properties.getRequestTopic())
+    public NewTopic kafkaPerfRequestTopicSync(KafkaPerfProperties properties) {
+        return TopicBuilder.name(properties.getRequestTopicSync())
                 .partitions(3)
                 .replicas(1)
                 .build();
@@ -29,6 +29,14 @@ public class KafkaClientConfig {
     public NewTopic kafkaPerfReplyTopic(KafkaPerfProperties properties) {
         return TopicBuilder.name(properties.getReplyTopic())
                 .partitions(1)
+                .replicas(1)
+                .build();
+    }
+
+    @Bean
+    public NewTopic kafkaPerfRequestTopicAsync(KafkaPerfProperties properties) {
+        return TopicBuilder.name(properties.getRequestTopicAsync())
+                .partitions(3)
                 .replicas(1)
                 .build();
     }

@@ -8,13 +8,23 @@ import org.springframework.stereotype.Component;
 public class RequestReplyPerfListener<R> {
 
     @KafkaListener(
-            topics = "${kafka.perf.request-topic}",
-            groupId = "${kafka.perf.consumer-group}-sync",
+            topics = "${kafka.perf.request-topic-sync}",
+            groupId = "${kafka.perf.consumer-group}",
             containerFactory = "perfKafkaListenerContainerFactory"
     )
     @SendTo
-    public String onRequest(String request) {
+    public String onRequestSync(String request) {
         return request;
+    }
+
+
+    @KafkaListener(
+            topics = "${kafka.perf.request-topic-async}",
+            groupId = "${kafka.perf.consumer-group}",
+            containerFactory = "perfKafkaListenerContainerFactory"
+    )
+    public void onRequestAsync(String request) {
+        //Do nothing
     }
 }
 

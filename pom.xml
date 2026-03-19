@@ -6,7 +6,7 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>3.5.11</version>
-        <!--        <version>4.0.3</version>-->
+<!--                <version>4.0.3</version>-->
         <relativePath/>
     </parent>
     <groupId>org.example</groupId>
@@ -21,15 +21,15 @@
     <dependencies>
 
         <!--        Spring Boot 4-->
-        <!--                <dependency>-->
-        <!--                    <groupId>tools.jackson.core</groupId>-->
-        <!--                    <artifactId>jackson-databind</artifactId>-->
-        <!--                    <version>3.1.0</version>-->
-        <!--                </dependency>-->
-        <!--                <dependency>-->
-        <!--                    <groupId>org.springframework.boot</groupId>-->
-        <!--                    <artifactId>spring-boot-starter-kafka</artifactId>-->
-        <!--                </dependency>-->
+<!--                        <dependency>-->
+<!--                            <groupId>tools.jackson.core</groupId>-->
+<!--                            <artifactId>jackson-databind</artifactId>-->
+<!--                            <version>3.1.0</version>-->
+<!--                        </dependency>-->
+<!--                        <dependency>-->
+<!--                            <groupId>org.springframework.boot</groupId>-->
+<!--                            <artifactId>spring-boot-starter-kafka</artifactId>-->
+<!--                        </dependency>-->
 
         <!--        Spring Boot 3-->
         <dependency>
